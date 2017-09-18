@@ -13,168 +13,262 @@
  *
  */
 
-#ifndef __DIGITAL_H
-#define __DIGITAL_H
+#ifndef __NFC_DIGITAL_H
+#define __NFC_DIGITAL_H
 
+#include <linux/skbuff.h>
 #include <net/nfc/nfc.h>
-#include <net/nfc/digital.h>
 
-#include <linux/crc-ccitt.h>
-#include <linux/crc-itu-t.h>
-
-#define PROTOCOL_ERR(req) pr_err("%d: NFC Digital Protocol error: %s\n", \
-				 __LINE__, req)
-
-#define DIGITAL_CMD_IN_SEND        0
-#define DIGITAL_CMD_TG_SEND        1
-#define DIGITAL_CMD_TG_LISTEN      2
-#define DIGITAL_CMD_TG_LISTEN_MDAA 3
-#define DIGITAL_CMD_TG_LISTEN_MD   4
-
-#define DIGITAL_MAX_HEADER_LEN 7
-#define DIGITAL_CRC_LEN        2
-
-#define DIGITAL_SENSF_NFCID2_NFC_DEP_B1 0x01
-#define DIGITAL_SENSF_NFCID2_NFC_DEP_B2 0xFE
-
-#define DIGITAL_SENS_RES_NFC_DEP 0x0100
-#define DIGITAL_SEL_RES_NFC_DEP  0x40
-#define DIGITAL_SENSF_FELICA_SC  0xFFFF
-
-#define DIGITAL_DRV_CAPS_IN_CRC(ddev) \
-	((ddev)->driver_capabilities & NFC_DIGITAL_DRV_CAPS_IN_CRC)
-#define DIGITAL_DRV_CAPS_TG_CRC(ddev) \
-	((ddev)->driver_capabilities & NFC_DIGITAL_DRV_CAPS_TG_CRC)
-
-struct digital_data_exch {
-	data_exchange_cb_t cb;
-	void *cb_context;
+/**
+ * Configuration types for in_configure_hw and tg_configure_hw.
+ */
+enum {
+	NFC_DIGITAL_CONFIG_RF_TECH = 0,
+	NFC_DIGITAL_CONFIG_FRAMING,
 };
 
-struct sk_buff *digital_skb_alloc(struct nfc_digital_dev *ddev,
-				  unsigned int len);
+/**
+ * RF technology values passed as param argument to in_configure_hw and
+ * tg_configure_hw for NFC_DIGITAL_CONFIG_RF_TECH configuration type.
+ */
+enum {
+	NFC_DIGITAL_RF_TECH_106A = 0,
+	NFC_DIGITAL_RF_TECH_212F,
+	NFC_DIGITAL_RF_TECH_424F,
+	NFC_DIGITAL_RF_TECH_ISO15693,
+	NFC_DIGITAL_RF_TECH_106B,
 
-int digital_send_cmd(struct nfc_digital_dev *ddev, u8 cmd_type,
-		     struct sk_buff *skb, struct digital_tg_mdaa_params *params,
-		     u16 timeout, nfc_digital_cmd_complete_t cmd_cb,
-		     void *cb_context);
+	NFC_DIGITAL_RF_TECH_LAST,
+};
 
-int digital_in_configure_hw(struct nfc_digital_dev *ddev, int type, int param);
-static inline int digital_in_send_cmd(struct nfc_digital_dev *ddev,
-				      struct sk_buff *skb, u16 timeout,
-				      nfc_digital_cmd_complete_t cmd_cb,
-				      void *cb_context)
+/**
+ * Framing configuration passed as param argument to in_configure_hw and
+ * tg_configure_hw for NFC_DIGITAL_CONFIG_FRAMING configuration type.
+ */
+enum {
+	NFC_DIGITAL_FRAMING_NFCA_SHORT = 0,
+	NFC_DIGITAL_FRAMING_NFCA_STANDARD,
+	NFC_DIGITAL_FRAMING_NFCA_STANDARD_WITH_CRC_A,
+	NFC_DIGITAL_FRAMING_NFCA_ANTICOL_COMPLETE,
+
+	NFC_DIGITAL_FRAMING_NFCA_T1T,
+	NFC_DIGITAL_FRAMING_NFCA_T2T,
+	NFC_DIGITAL_FRAMING_NFCA_T4T,
+	NFC_DIGITAL_FRAMING_NFCA_NFC_DEP,
+
+	NFC_DIGITAL_FRAMING_NFCF,
+	NFC_DIGITAL_FRAMING_NFCF_T3T,
+	NFC_DIGITAL_FRAMING_NFCF_NFC_DEP,
+	NFC_DIGITAL_FRAMING_NFC_DEP_ACTIVATED,
+
+	NFC_DIGITAL_FRAMING_ISO15693_INVENTORY,
+	NFC_DIGITAL_FRAMING_ISO15693_T5T,
+
+	NFC_DIGITAL_FRAMING_NFCB,
+	NFC_DIGITAL_FRAMING_NFCB_T4T,
+
+	NFC_DIGITAL_FRAMING_LAST,
+};
+
+#define DIGITAL_MDAA_NFCID1_SIZE 3
+
+struct digital_tg_mdaa_params {
+	u16 sens_res;
+	u8 nfcid1[DIGITAL_MDAA_NFCID1_SIZE];
+	u8 sel_res;
+
+	u8 nfcid2[NFC_NFCID2_MAXSIZE];
+	u16 sc;
+};
+
+struct nfc_digital_dev;
+
+/**
+ * nfc_digital_cmd_complete_t - Definition of command result callback
+ *
+ * @ddev: nfc_digital_device ref
+ * @arg: user data
+ * @resp: response data
+ *
+ * resp pointer can be an error code and will be checked with IS_ERR() macro.
+ * The callback is responsible for freeing resp sk_buff.
+ */
+typedef void (*nfc_digital_cmd_complete_t)(struct nfc_digital_dev *ddev,
+					   void *arg, struct sk_buff *resp);
+
+/**
+ * Device side NFC Digital operations
+ *
+ * Initiator mode:
+ * @in_configure_hw: Hardware configuration for RF technology and communication
+ *	framing in initiator mode. This is a synchronous function.
+ * @in_send_cmd: Initiator mode data exchange using RF technology and framing
+ *	previously set with in_configure_hw. The peer response is returned
+ *	through callback cb. If an io error occurs or the peer didn't reply
+ *	within the specified timeout (ms), the error code is passed back through
+ *	the resp pointer. This is an asynchronous function.
+ *
+ * Target mode: Only NFC-DEP protocol is supported in target mode.
+ * @tg_configure_hw: Hardware configuration for RF technology and communication
+ *	framing in target mode. This is a synchronous function.
+ * @tg_send_cmd: Target mode data exchange using RF technology and framing
+ *	previously set with tg_configure_hw. The peer next command is returned
+ *	through callback cb. If an io error occurs or the peer didn't reply
+ *	within the specified timeout (ms), the error code is passed back through
+ *	the resp pointer. This is an asynchronous function.
+ * @tg_listen: Put the device in listen mode waiting for data from the peer
+ *	device. This is an asynchronous function.
+ * @tg_listen_mdaa: If supported, put the device in automatic listen mode with
+ *	mode detection and automatic anti-collision. In this mode, the device
+ *	automatically detects the RF technology and executes the anti-collision
+ *	detection using the command responses specified in mdaa_params. The
+ *	mdaa_params structure contains SENS_RES, NFCID1, and SEL_RES for 106A RF
+ *	tech. NFCID2 and system code (sc) for 212F and 424F. The driver returns
+ *	the NFC-DEP ATR_REQ command through cb. The digital stack deducts the RF
+ *	tech by analyzing the SoD of the frame containing the ATR_REQ command.
+ *	This is an asynchronous function.
+ * @tg_listen_md: If supported, put the device in automatic listen mode with
+ *	mode detection but without automatic anti-collision. In this mode, the
+ *	device automatically detects the RF technology.  What the actual
+ *	RF technology is can be retrieved by calling @tg_get_rf_tech.
+ *	The digital stack will then perform the appropriate anti-collision
+ *	sequence.  This is an asynchronous function.
+ * @tg_get_rf_tech: Required when @tg_listen_md is supported, unused otherwise.
+ *	Return the RF Technology that was detected by the @tg_listen_md call.
+ *	This is a synchronous function.
+ *
+ * @switch_rf: Turns device radio on or off. The stack does not call explicitly
+ *	switch_rf to turn the radio on. A call to in|tg_configure_hw must turn
+ *	the device radio on.
+ * @abort_cmd: Discard the last sent command.
+ *
+ * Notes: Asynchronous functions have a timeout parameter. It is the driver
+ *	responsibility to call the digital stack back through the
+ *	nfc_digital_cmd_complete_t callback when no RF respsonse has been
+ *	received within the specified time (in milliseconds). In that case the
+ *	driver must set the resp sk_buff to ERR_PTR(-ETIMEDOUT).
+ *	Since the digital stack serializes commands to be sent, it's mandatory
+ *	for the driver to handle the timeout correctly. Otherwise the stack
+ *	would not be able to send new commands, waiting for the reply of the
+ *	current one.
+ */
+struct nfc_digital_ops {
+	int (*in_configure_hw)(struct nfc_digital_dev *ddev, int type,
+			       int param);
+	int (*in_send_cmd)(struct nfc_digital_dev *ddev, struct sk_buff *skb,
+			   u16 timeout, nfc_digital_cmd_complete_t cb,
+			   void *arg);
+
+	int (*tg_configure_hw)(struct nfc_digital_dev *ddev, int type,
+			       int param);
+	int (*tg_send_cmd)(struct nfc_digital_dev *ddev, struct sk_buff *skb,
+			   u16 timeout, nfc_digital_cmd_complete_t cb,
+			   void *arg);
+	int (*tg_listen)(struct nfc_digital_dev *ddev, u16 timeout,
+			 nfc_digital_cmd_complete_t cb, void *arg);
+	int (*tg_listen_mdaa)(struct nfc_digital_dev *ddev,
+			      struct digital_tg_mdaa_params *mdaa_params,
+			      u16 timeout, nfc_digital_cmd_complete_t cb,
+			      void *arg);
+	int (*tg_listen_md)(struct nfc_digital_dev *ddev, u16 timeout,
+			    nfc_digital_cmd_complete_t cb, void *arg);
+	int (*tg_get_rf_tech)(struct nfc_digital_dev *ddev, u8 *rf_tech);
+
+	int (*switch_rf)(struct nfc_digital_dev *ddev, bool on);
+	void (*abort_cmd)(struct nfc_digital_dev *ddev);
+};
+
+#define NFC_DIGITAL_POLL_MODE_COUNT_MAX	6 /* 106A, 212F, and 424F in & tg */
+
+typedef int (*digital_poll_t)(struct nfc_digital_dev *ddev, u8 rf_tech);
+
+struct digital_poll_tech {
+	u8 rf_tech;
+	digital_poll_t poll_func;
+};
+
+/**
+ * Driver capabilities - bit mask made of the following values
+ *
+ * @NFC_DIGITAL_DRV_CAPS_IN_CRC: The driver handles CRC calculation in initiator
+ *	mode.
+ * @NFC_DIGITAL_DRV_CAPS_TG_CRC: The driver handles CRC calculation in target
+ *	mode.
+ */
+#define NFC_DIGITAL_DRV_CAPS_IN_CRC	0x0001
+#define NFC_DIGITAL_DRV_CAPS_TG_CRC	0x0002
+
+struct nfc_digital_dev {
+	struct nfc_dev *nfc_dev;
+	struct nfc_digital_ops *ops;
+
+	u32 protocols;
+
+	int tx_headroom;
+	int tx_tailroom;
+
+	u32 driver_capabilities;
+	void *driver_data;
+
+	struct digital_poll_tech poll_techs[NFC_DIGITAL_POLL_MODE_COUNT_MAX];
+	u8 poll_tech_count;
+	u8 poll_tech_index;
+	struct mutex poll_lock;
+
+	struct work_struct cmd_work;
+	struct work_struct cmd_complete_work;
+	struct list_head cmd_queue;
+	struct mutex cmd_lock;
+
+	struct work_struct poll_work;
+
+	u8 curr_protocol;
+	u8 curr_rf_tech;
+	u8 curr_nfc_dep_pni;
+	u8 did;
+
+	u8 local_payload_max;
+	u8 remote_payload_max;
+
+	struct sk_buff *chaining_skb;
+	struct digital_data_exch *data_exch;
+
+	int atn_count;
+	int nack_count;
+
+	struct sk_buff *saved_skb;
+	unsigned int saved_skb_len;
+
+	u16 target_fsc;
+
+	int (*skb_check_crc)(struct sk_buff *skb);
+	void (*skb_add_crc)(struct sk_buff *skb);
+};
+
+struct nfc_digital_dev *nfc_digital_allocate_device(struct nfc_digital_ops *ops,
+						    __u32 supported_protocols,
+						    __u32 driver_capabilities,
+						    int tx_headroom,
+						    int tx_tailroom);
+void nfc_digital_free_device(struct nfc_digital_dev *ndev);
+int nfc_digital_register_device(struct nfc_digital_dev *ndev);
+void nfc_digital_unregister_device(struct nfc_digital_dev *ndev);
+
+static inline void nfc_digital_set_parent_dev(struct nfc_digital_dev *ndev,
+					      struct device *dev)
 {
-	return digital_send_cmd(ddev, DIGITAL_CMD_IN_SEND, skb, NULL, timeout,
-				cmd_cb, cb_context);
+	nfc_set_parent_dev(ndev->nfc_dev, dev);
 }
 
-void digital_poll_next_tech(struct nfc_digital_dev *ddev);
-
-int digital_in_send_sens_req(struct nfc_digital_dev *ddev, u8 rf_tech);
-int digital_in_send_sensb_req(struct nfc_digital_dev *ddev, u8 rf_tech);
-int digital_in_send_sensf_req(struct nfc_digital_dev *ddev, u8 rf_tech);
-int digital_in_send_iso15693_inv_req(struct nfc_digital_dev *ddev, u8 rf_tech);
-
-int digital_in_iso_dep_pull_sod(struct nfc_digital_dev *ddev,
-				struct sk_buff *skb);
-int digital_in_iso_dep_push_sod(struct nfc_digital_dev *ddev,
-				struct sk_buff *skb);
-
-int digital_target_found(struct nfc_digital_dev *ddev,
-			 struct nfc_target *target, u8 protocol);
-
-int digital_in_recv_mifare_res(struct sk_buff *resp);
-
-int digital_in_send_atr_req(struct nfc_digital_dev *ddev,
-			    struct nfc_target *target, __u8 comm_mode, __u8 *gb,
-			    size_t gb_len);
-int digital_in_send_dep_req(struct nfc_digital_dev *ddev,
-			    struct nfc_target *target, struct sk_buff *skb,
-			    struct digital_data_exch *data_exch);
-
-int digital_tg_configure_hw(struct nfc_digital_dev *ddev, int type, int param);
-static inline int digital_tg_send_cmd(struct nfc_digital_dev *ddev,
-			struct sk_buff *skb, u16 timeout,
-			nfc_digital_cmd_complete_t cmd_cb, void *cb_context)
+static inline void nfc_digital_set_drvdata(struct nfc_digital_dev *dev,
+					   void *data)
 {
-	return digital_send_cmd(ddev, DIGITAL_CMD_TG_SEND, skb, NULL, timeout,
-				cmd_cb, cb_context);
+	dev->driver_data = data;
 }
 
-void digital_tg_recv_sens_req(struct nfc_digital_dev *ddev, void *arg,
-			      struct sk_buff *resp);
-
-void digital_tg_recv_sensf_req(struct nfc_digital_dev *ddev, void *arg,
-			       struct sk_buff *resp);
-
-static inline int digital_tg_listen(struct nfc_digital_dev *ddev, u16 timeout,
-				    nfc_digital_cmd_complete_t cb, void *arg)
+static inline void *nfc_digital_get_drvdata(struct nfc_digital_dev *dev)
 {
-	return digital_send_cmd(ddev, DIGITAL_CMD_TG_LISTEN, NULL, NULL,
-				timeout, cb, arg);
+	return dev->driver_data;
 }
 
-void digital_tg_recv_atr_req(struct nfc_digital_dev *ddev, void *arg,
-			     struct sk_buff *resp);
-
-int digital_tg_send_dep_res(struct nfc_digital_dev *ddev, struct sk_buff *skb);
-
-int digital_tg_listen_nfca(struct nfc_digital_dev *ddev, u8 rf_tech);
-int digital_tg_listen_nfcf(struct nfc_digital_dev *ddev, u8 rf_tech);
-void digital_tg_recv_md_req(struct nfc_digital_dev *ddev, void *arg,
-			    struct sk_buff *resp);
-
-typedef u16 (*crc_func_t)(u16, const u8 *, size_t);
-
-#define CRC_A_INIT 0x6363
-#define CRC_B_INIT 0xFFFF
-#define CRC_F_INIT 0x0000
-
-void digital_skb_add_crc(struct sk_buff *skb, crc_func_t crc_func, u16 init,
-			 u8 bitwise_inv, u8 msb_first);
-
-static inline void digital_skb_add_crc_a(struct sk_buff *skb)
-{
-	digital_skb_add_crc(skb, crc_ccitt, CRC_A_INIT, 0, 0);
-}
-
-static inline void digital_skb_add_crc_b(struct sk_buff *skb)
-{
-	digital_skb_add_crc(skb, crc_ccitt, CRC_B_INIT, 1, 0);
-}
-
-static inline void digital_skb_add_crc_f(struct sk_buff *skb)
-{
-	digital_skb_add_crc(skb, crc_itu_t, CRC_F_INIT, 0, 1);
-}
-
-static inline void digital_skb_add_crc_none(struct sk_buff *skb)
-{
-	return;
-}
-
-int digital_skb_check_crc(struct sk_buff *skb, crc_func_t crc_func,
-			  u16 crc_init, u8 bitwise_inv, u8 msb_first);
-
-static inline int digital_skb_check_crc_a(struct sk_buff *skb)
-{
-	return digital_skb_check_crc(skb, crc_ccitt, CRC_A_INIT, 0, 0);
-}
-
-static inline int digital_skb_check_crc_b(struct sk_buff *skb)
-{
-	return digital_skb_check_crc(skb, crc_ccitt, CRC_B_INIT, 1, 0);
-}
-
-static inline int digital_skb_check_crc_f(struct sk_buff *skb)
-{
-	return digital_skb_check_crc(skb, crc_itu_t, CRC_F_INIT, 0, 1);
-}
-
-static inline int digital_skb_check_crc_none(struct sk_buff *skb)
-{
-	return 0;
-}
-
-#endif /* __DIGITAL_H */
+#endif /* __NFC_DIGITAL_H */

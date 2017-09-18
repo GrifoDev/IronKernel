@@ -1,5 +1,0 @@
-config EXYNOS_IVA
-	bool "samsung IVA driver support"
-	default n
-	help
-		Enable samsung iva driver
