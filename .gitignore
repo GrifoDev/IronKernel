@@ -116,9 +116,7 @@ all.config
 #
 # IronKernel
 #
-build.sh
 build.log
 *.img
 *.img-zImage
-build
 arch/arm64/boot/dtb/
