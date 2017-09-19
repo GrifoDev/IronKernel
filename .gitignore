@@ -112,3 +112,13 @@ all.config
 
 # Kdevelop4
 *.kdev4
+
+#
+# IronKernel
+#
+build.sh
+build.log
+*.img
+*.img-zImage
+build
+arch/arm64/boot/dtb/
