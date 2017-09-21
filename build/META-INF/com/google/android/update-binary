@@ -31,9 +31,13 @@ if grep -q G955 BLmodel; then
 else if grep -q G950 BLmodel; then
 	cat dreamlte-eur.img > /dev/block/platform/11120000.ufs/by-name/BOOT
 	ui_print " - Flashing G950X kernel"
+else if grep -q N950 BLmodel; then
+	cat greatlte-eur.img > /dev/block/platform/11120000.ufs/by-name/BOOT
+	ui_print " - Flashing N950X kernel"
 else
 	echo "Not a supported model. Dont flash any kernel!"
 	ui_print " - Model not support, no kernel flashed"
+fi;
 fi;
 fi;
 
@@ -53,11 +57,19 @@ rm -f /system/vendor/lib64/libsecure_storage.so
 
 cd
 cd /tmp/IronKernel
-mv -f vendor/firmware/fimc_is_lib.bin /system/vendor/firmware/fimc_is_lib.bin
-mv -f vendor/firmware/fimc_is_rta_2l2_3h1.bin /system/vendor/firmware/fimc_is_rta_2l2_3h1.bin
-mv -f vendor/firmware/fimc_is_rta_2l2_imx320.bin /system/vendor/firmware/fimc_is_rta_2l2_imx320.bin
-mv -f vendor/firmware/fimc_is_rta_imx333_3h1.bin /system/vendor/firmware/fimc_is_rta_imx333_3h1.bin
-mv -f vendor/firmware/fimc_is_rta_imx333_imx320.bin /system/vendor/firmware/fimc_is_rta_imx333_imx320.bin
+if grep -q G95 BLmodel; then
+	mv -f vendor/s8/firmware/fimc_is_lib.bin /system/vendor/firmware/fimc_is_lib.bin
+	mv -f vendor/s8/firmware/fimc_is_rta_2l2_3h1.bin /system/vendor/firmware/fimc_is_rta_2l2_3h1.bin
+	mv -f vendor/s8/firmware/fimc_is_rta_2l2_imx320.bin /system/vendor/firmware/fimc_is_rta_2l2_imx320.bin
+	mv -f vendor/s8/firmware/fimc_is_rta_imx333_3h1.bin /system/vendor/firmware/fimc_is_rta_imx333_3h1.bin
+	mv -f vendor/s8/firmware/fimc_is_rta_imx333_imx320.bin /system/vendor/firmware/fimc_is_rta_imx333_imx320.bin
+else
+	mv -f vendor/n8/firmware/fimc_is_lib.bin /system/vendor/firmware/fimc_is_lib.bin
+	mv -f vendor/n8/firmware/fimc_is_rta_2l2_3h1.bin /system/vendor/firmware/fimc_is_rta_2l2_3h1.bin
+	mv -f vendor/n8/firmware/fimc_is_rta_2l2_imx320.bin /system/vendor/firmware/fimc_is_rta_2l2_imx320.bin
+	mv -f vendor/n8/firmware/fimc_is_rta_imx333_3h1.bin /system/vendor/firmware/fimc_is_rta_imx333_3h1.bin
+	mv -f vendor/n8/firmware/fimc_is_rta_imx333_imx320.bin /system/vendor/firmware/fimc_is_rta_imx333_imx320.bin
+fi;
 mv -f vendor/lib/libsecure_storage.so /system/vendor/lib/libsecure_storage.so
 mv -f vendor/lib64/libsecure_storage.so /system/vendor/lib64/libsecure_storage.so
 
