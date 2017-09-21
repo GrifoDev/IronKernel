@@ -45,6 +45,10 @@ ui_print " - removing critical mcRegistry"
 
 rm -f /system/app/mcRegistry/ffffffffd0000000000000000000000a.tlbin
 
+ui_print " - removing Security Log Agent"
+
+rm -f /system/app/SecurityLogAgent
+
 ui_print " - removing vendor files"
 
 rm -f /system/vendor/firmware/fimc_is_lib.bin
