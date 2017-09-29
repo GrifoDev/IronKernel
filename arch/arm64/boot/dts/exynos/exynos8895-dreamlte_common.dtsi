@@ -3193,7 +3193,7 @@
 		regulator,3p0 = "vdd_ddi_3p0";
 		regulator,1p8 = "vdd_ddi_1p8";
 		regulator,1p6 = "vdd_ddi_1p6";
-		
+
 		#address-cells = <2>;
 		#size-cells = <1>;
 		ranges;
@@ -3216,8 +3216,24 @@
 
 				/* default panel */
 				0x000000 0x000000 0x0   /* not found : s6e3ha6_dream_a3_da_default */
-			>;                   
-		}; 
+			>;
+		};
+	};
+
+	sec_abc {
+		compatible = "samsung,sec_abc";
+		status = "okay";
+
+		gpu {
+			gpu,label="GPU fault";
+			gpu,threshold_count=<20>;
+			gpu,threshold_time=<1200>;
+		};
+		aicl {
+			aicl,label="battery aicl";
+			aicl,threshold_count=<5>;
+			aicl,threshold_time=<300>;
+		};
 	};
 
 	argos {
@@ -3331,9 +3347,9 @@
 			net_boost,table_size = <4>;
 			net_boost,table= <
 				60 1664000 0 1586000 0 0 0 0 0 0
-				150 1664000 0 1690000 0 0 0 0 0 0
-				200 2288000 0 1690000 0 1352000 400000 1 1 1
-				300 2496000 0 1690000 0 2002000 533000 1 1 1
+				150 1664000 0 1586000 0 0 0 0 0 0
+				200 2288000 0 1586000 0 1352000 400000 1 1 1
+				300 2496000 0 1586000 0 2002000 533000 1 1 1
 				>;
 		};
 
@@ -3344,8 +3360,8 @@
 			net_boost,table= <
 				100 1144000 0 1066000 0 0 0 0 0 0
 				150 1456000 0 1378000 0 0 0 0 0 0
-				200 1664000 0 1690000 0 845000 400000 1 1 1
-				300 2496000 0 1690000 0 1352000 533000 1 1 1
+				200 1664000 0 1586000 0 845000 400000 1 1 1
+				300 2288000 0 1586000 0 1352000 533000 1 1 1
 				>;
 		};
 
