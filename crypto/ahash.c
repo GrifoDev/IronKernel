@@ -455,7 +455,6 @@ static void ahash_def_finup_done1(struct crypto_async_request *req, int err)
 	err = ahash_def_finup_finish1(areq, err);
 	if (areq->priv)
 		return;
-
 	areq->base.complete(&areq->base, err);
 }
 
@@ -473,7 +472,6 @@ static int ahash_def_finup(struct ahash_request *req)
 	    (err == -EBUSY && (ahash_request_flags(req) &
 			       CRYPTO_TFM_REQ_MAY_BACKLOG)))
 		return err;
-
 	return ahash_def_finup_finish1(req, err);
 }
 
