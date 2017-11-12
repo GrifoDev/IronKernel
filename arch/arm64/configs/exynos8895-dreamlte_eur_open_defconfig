@@ -4143,7 +4143,7 @@ CONFIG_SEC_NAD_API=y
 #
 # Samsung ABC Options
 #
-# CONFIG_SEC_ABC is not set
+CONFIG_SEC_ABC=y
 CONFIG_VNSWAP=y
 # CONFIG_GOLDFISH is not set
 # CONFIG_CHROME_PLATFORMS is not set
