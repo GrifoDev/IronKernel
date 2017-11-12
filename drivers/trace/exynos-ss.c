@@ -807,6 +807,18 @@ unsigned int exynos_ss_get_item_paddr(char* name)
 }
 EXPORT_SYMBOL(exynos_ss_get_item_paddr);
 
+unsigned long exynos_ss_get_item_vaddr(char *name)
+{
+	unsigned long i;
+
+	for (i = 0; i < ARRAY_SIZE(ess_items); i++) {
+		if (!strncmp(ess_items[i].name, name, strlen(name)))
+			return ess_items[i].entry.vaddr;
+	}
+	return 0;
+}
+EXPORT_SYMBOL(exynos_ss_get_item_vaddr);
+
 int exynos_ss_get_hardlockup(void)
 {
 	return ess_desc.hardlockup;
