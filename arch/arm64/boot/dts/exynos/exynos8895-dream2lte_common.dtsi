@@ -39,10 +39,10 @@
 		reg = <0x00000008 0x80000000 0x80000000>;
 	};
 
-	memory@900000000 {
-		device_type = "memory";
-		reg = <0x00000009 0x00000000 0x0>;
-	};
+        memory@900000000 {
+                device_type = "memory";
+                reg = <0x00000009 0x00000000 0x0>;
+        };
 
 	chosen {
 		bootargs = "console=ram root=/dev/ram0 clk_ignore_unused ess_setup=0x86000000 bcm_setup=0xffffff80f8e00000 androidboot.hardware=samsungexynos8895 androidboot.selinux=permissive androidboot.debug_level=0x4948 pmic_info=0x3 firmware_class.path=/vendor/firmware reserve-fimc=0xffffff80fa000000 ecd_setup=normal";
@@ -600,19 +600,19 @@
 			pinctrl-names = "default";
 			pinctrl-0 = <&sub_pmic_irq>;
 
-			b1_remote_sense_en = <1>; /* 1 : enable , 0 : disable */
-
 			regulators {
 				_buck1_reg: s2mpb02-buck1 {
-					regulator-name = "VDDD_CORE_0.8V_COMP";
-					regulator-min-microvolt = <650000>;
-					regulator-max-microvolt = <850000>;
-				};
-
-				_buck2_reg: s2mpb02-buck2 {
 					regulator-name = "S2MPB02_BUCK1";
 					regulator-min-microvolt = <1300000>;
 					regulator-max-microvolt = <1300000>;
+					regulator-always-on;
+					regulator-boot-on;
+				};
+
+				_buck2_reg: s2mpb02-buck2 {
+					regulator-name = "VDDD_CORE_0.8V_COMP";
+					regulator-min-microvolt = <650000>;
+					regulator-max-microvolt = <850000>;
 				};
 
 				_buckboost_reg: s2mpb02-bb {
@@ -1306,11 +1306,6 @@
 							cirrus,wmfw-file = "dsd";
 							cirrus,bin-file = "None";
 							cirrus,append-sr;
-						};
-						TRACE {
-							cirrus,wmfw-file = "trace";
-							cirrus,bin-file = "None";
-							cirrus,compr-caps = <1 8 0x4 1 8000 16000 24000 32000 48000>;
 						};
 					};
 				};
