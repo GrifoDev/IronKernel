@@ -3216,24 +3216,8 @@
 
 				/* default panel */
 				0x000000 0x000000 0x0   /* not found : s6e3ha6_dream_a3_da_default */
-			>;
-		};
-	};
-
-	sec_abc {
-		compatible = "samsung,sec_abc";
-		status = "okay";
-
-		gpu {
-			gpu,label="GPU fault";
-			gpu,threshold_count=<20>;
-			gpu,threshold_time=<1200>;
-		};
-		aicl {
-			aicl,label="battery aicl";
-			aicl,threshold_count=<5>;
-			aicl,threshold_time=<300>;
-		};
+			>;                   
+		}; 
 	};
 
 	argos {
