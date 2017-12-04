@@ -85,13 +85,6 @@ on post-fs-data
     chmod 0660 /efs/maxim/rdc_cal
     chown audioserver system /data/firmware
 
-# Change permission for A-Box firmware logs file & GPR dump
-    chown audioserver system /sys/kernel/debug/abox/log-00
-    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/gpr
-    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/calliope_sram
-    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/calliope_dram
-    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/calliope_iva
-
 # VTS sysfs file permission
     chown audioserver system /sys/devices/platform/14020000.vts/vts_svoice_model
     chown audioserver system /sys/devices/platform/14020000.vts/vts_google_model
@@ -259,7 +252,7 @@ on boot
     chmod 0664 /sys/devices/platform/13900000.mali/dvfs_min_lock
     chown radio system /sys/devices/platform/13900000.mali/dvfs_max_lock
     chmod 0664 /sys/devices/platform/13900000.mali/dvfs_max_lock
-
+    
     #Permission for gpu_info
     chown system system /sys/kernel/gpu/gpu_info
 
@@ -496,7 +489,7 @@ on fs
     chmod 0771 /cpefs
     restorecon_recursive /cpefs
 
-# DQMDBG
+# DQMDBG 
     chown system system /dqmdbg
     chmod 0770 /dqmdbg
     mkdir /dqmdbg/backup 0770 system system
@@ -548,7 +541,7 @@ on fs
 
 # permissions for BCDS systrace
     chmod 0666 /sys/class/lcd/panel/fingerprint
-    chown system media_rw /sys/class/lcd/panel/fingerprint
+    chown system media_rw /sys/class/lcd/panel/fingerprint 
 
 # Permissions for MDNIE
     chown system media_rw /sys/class/mdnie/mdnie/bypass
@@ -977,10 +970,16 @@ on property:sys.mobicoredaemon.enable=true
 on property:sys.boot_completed=1
     setprop security.semdaemonfinish 0
     start sem_daemon
+    # Change permission for A-Box firmware logs file & GPR dump
+    chown audioserver system /sys/kernel/debug/abox/log-00
+    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/gpr
+    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/calliope_sram
+    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/calliope_dram
+    chown audioserver system /sys/devices/platform/13e50000.abox/13e50000.abox:abox_debug@0/calliope_iva
 
 on property:security.semdaemonfinish=1
     stop sem_daemon
-
+	
 service prepare_param /system/bin/prepare_param.sh /dev/block/platform/11120000.ufs/by-name/PARAM
     class core
     user root
@@ -1008,7 +1007,7 @@ service wsmd /system/bin/wsmd
     group system
     disabled
 on property:ro.wsmd.enable=true
-    mkdir /dev/socket/wsm_socket
+    mkdir /dev/socket/wsm_socket 
     chmod 0711 /dev/socket/wsm_socket
     chown system system /dev/socket/wsm_socket
     start wsmd
