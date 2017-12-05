@@ -213,7 +213,6 @@ static inline unsigned long exynos_ss_get_item_vaddr(char *name)
 {
 	return 0;
 }
-
 static inline bool exynos_ss_dumper_one(void *v_dumper,
 				char *line, size_t size, size_t *len)
 {
