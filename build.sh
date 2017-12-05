@@ -1,7 +1,7 @@
 #!/bin/bash
 # GrifoDev script
 
-export MODEL=greatlte
+export MODEL=dream2lte
 export VARIANT=eur
 export ARCH=arm64
 export BUILD_CROSS_COMPILE=../Toolchain/aarch64-cortex_a53-linux-gnueabi-6.4.0/bin/aarch64-cortex_a53-linux-gnueabi-
