@@ -1942,7 +1942,6 @@
 		gpio_sda= <&gpe4 4 0x1>;
 		gpio_scl= <&gpe4 5 0x1>;
 		status = "disabled";
-		samsung,stop-after-trans;
 	};
 
 	/* HSI2C_USI12_1 */
@@ -3563,23 +3562,21 @@
 		interrupt-parent = <&mailbox_vts>;
 		interrupts = <0>, <1>, <2>, <3>, <4>, <5>;
 		interrupt-names = "error", "boot_completed", "ipc_received", "voice_triggered", "trigger_period_elapsed", "record_period_elapsed";
-	};
+		vts_dma0: vts_dma@0x0 {
+			compatible = "samsung,vts-dma";
+			reg = <0x0 0x0 0x0>;
+			vts = <&vts>;
+			id = <0>;
+			type = "vts-trigger";
+		};
 
-	vts_dma0: vts_dma@0x0 {
-		compatible = "samsung,vts-dma";
-		reg = <0x0 0x0 0x0>;
-		vts = <&vts>;
-		id = <0>;
-		type = "vts-trigger";
-	};
-
-
-	vts_dma1: vts_dma@0x1 {
-		compatible = "samsung,vts-dma";
-		reg = <0x0 0x1 0x0>;
-		vts = <&vts>;
-		id = <1>;
-		type = "vts-record";
+		vts_dma1: vts_dma@0x1 {
+			compatible = "samsung,vts-dma";
+			reg = <0x0 0x1 0x0>;
+			vts = <&vts>;
+			id = <1>;
+			type = "vts-record";
+		};
 	};
 
 	pcie0@116A0000 {
