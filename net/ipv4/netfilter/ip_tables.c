@@ -868,7 +868,6 @@ translate_table(struct net *net, struct xt_table_info *newinfo, void *entry0,
 						 repl->hook_entry,
 						 repl->underflow,
 						 repl->valid_hooks);
-<<<<<<< HEAD
 		if (ret != 0) {
 #ifdef CONFIG_ONESHOT_UID
 			write_unlock(&oneshot_uid_ipv4.lock);
