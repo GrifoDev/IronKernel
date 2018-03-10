@@ -10,7 +10,7 @@
 #include <linux/cmdline_helper.h>
 #include <asm/setup.h>
 
-char* add_cmdline(char* original_cmdline, char* cmdline_to_be_add)
+char* add_cmdline(const char* original_cmdline, char* cmdline_to_be_add)
 {
 	static char new_command_line[COMMAND_LINE_SIZE];
 	char *cmd = new_command_line;
@@ -23,7 +23,7 @@ char* add_cmdline(char* original_cmdline, char* cmdline_to_be_add)
 	return new_command_line;
 }
 
-char* del_cmdline(char* original_cmdline, char* cmdline_to_be_del)
+char* del_cmdline(const char* original_cmdline, char* cmdline_to_be_del)
 {
 	static char new_command_line[COMMAND_LINE_SIZE];
 	char *offset_addr, *cmd = new_command_line;

@@ -9,7 +9,7 @@
 #ifndef _LINUX_CMDLINE_HELPER_H
 #define _LINUX_CMDLINE_HELPER_H
 
-extern char* add_cmdline(char* original_cmdline, char* cmdline_to_be_add);
-extern char* del_cmdline(char* original_cmdline, char* cmdline_to_be_del);
+extern char* add_cmdline(const char* original_cmdline, char* cmdline_to_be_add);
+extern char* del_cmdline(const char* original_cmdline, char* cmdline_to_be_del);
 
 #endif  /*_LINUX_CMDLINE_HELPER_H*/
