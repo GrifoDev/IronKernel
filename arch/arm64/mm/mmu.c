@@ -876,6 +876,19 @@ void *__init fixmap_remap_fdt(phys_addr_t dt_phys)
 
 	return dt_virt;
 }
+
+#ifdef CONFIG_HAVE_ARCH_HUGE_VMAP
+int pud_free_pmd_page(pud_t *pud)
+{
+	return pud_none(*pud);
+}
+
+int pmd_free_pte_page(pmd_t *pmd)
+{
+	return pmd_none(*pmd);
+}
+#endif
+
 /* For compatible with Exynos */
 
 LIST_HEAD(static_vmlist);
@@ -955,3 +968,4 @@ void __init iotable_init_exec(struct map_desc *io_desc, int nr)
 {
 	__iotable_init(io_desc, nr, 1);
 }
+
