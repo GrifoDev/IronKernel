@@ -18,32 +18,10 @@ PAGE_SIZE=2048
 DTB_PADDING=0
 
 case $MODEL in
-dreamlte)
-	case $VARIANT in
-	can|duos|eur|xx)
-		KERNEL_DEFCONFIG=exynos8895-dreamlte_eur_open_defconfig
-		;;
-	*)
-		echo "Unknown variant: $VARIANT"
-		exit 1
-		;;
-	esac
-;;
-dream2lte)
-	case $VARIANT in
-	can|duos|eur|xx)
-		KERNEL_DEFCONFIG=exynos8895-dream2lte_eur_open_defconfig
-		;;
-	*)
-		echo "Unknown variant: $VARIANT"
-		exit 1
-		;;
-	esac
-;;
 greatlte)
 	case $VARIANT in
 	can|duos|eur|xx)
-		KERNEL_DEFCONFIG=exynos8895-greatlte_eur_open_defconfig
+		KERNEL_DEFCONFIG=exynos8895-greatlte_defconfig
 		;;
 	*)
 		echo "Unknown variant: $VARIANT"
@@ -78,43 +56,11 @@ FUNC_BUILD_DTIMAGE_TARGET()
 	}
 
 	case $MODEL in
-	dreamlte)
-		case $VARIANT in
-		can|duos|eur|xx)
-			DTSFILES="exynos8895-dreamlte_eur_open_00 exynos8895-dreamlte_eur_open_01
-					exynos8895-dreamlte_eur_open_02 exynos8895-dreamlte_eur_open_03
-					exynos8895-dreamlte_eur_open_04 exynos8895-dreamlte_eur_open_05
-					exynos8895-dreamlte_eur_open_07 exynos8895-dreamlte_eur_open_08
-					exynos8895-dreamlte_eur_open_09 exynos8895-dreamlte_eur_open_10"
-			;;
-		*)
-			echo "Unknown variant: $VARIANT"
-			exit 1
-			;;
-		esac
-	;;
-	dream2lte)
-		case $VARIANT in
-		can|duos|eur|xx)
-			DTSFILES="exynos8895-dream2lte_eur_open_01 exynos8895-dream2lte_eur_open_02
-					exynos8895-dream2lte_eur_open_03 exynos8895-dream2lte_eur_open_04
-					exynos8895-dream2lte_eur_open_05 exynos8895-dream2lte_eur_open_06
-					exynos8895-dream2lte_eur_open_07 exynos8895-dream2lte_eur_open_08
-					exynos8895-dream2lte_eur_open_09 exynos8895-dream2lte_eur_open_10"
-			;;
-		*)
-			echo "Unknown variant: $VARIANT"
-			exit 1
-			;;
-		esac
-	;;
 	greatlte)
 		case $VARIANT in
 		can|duos|eur|xx)
 			DTSFILES="exynos8895-greatlte_eur_open_00 exynos8895-greatlte_eur_open_01
-					exynos8895-greatlte_eur_open_02 exynos8895-greatlte_eur_open_03
-					exynos8895-greatlte_eur_open_05 exynos8895-greatlte_eur_open_06
-					exynos8895-greatlte_eur_open_07"
+					exynos8895-greatlte_eur_open_02 exynos8895-greatlte_eur_open_06"
 			;;
 		*)
 			echo "Unknown variant: $VARIANT"
@@ -186,40 +132,6 @@ FUNC_BUILD_RAMDISK()
 	mv $RDIR/arch/$ARCH/boot/dtb.img $RDIR/arch/$ARCH/boot/boot.img-dtb
 
 	case $MODEL in
-	dreamlte)
-		case $VARIANT in
-		can|duos|eur|xx)
-			rm -f $RDIR/ramdisk/G950F/split_img/boot.img-zImage
-			rm -f $RDIR/ramdisk/G950F/split_img/boot.img-dtb
-			mv -f $RDIR/arch/$ARCH/boot/boot.img-zImage $RDIR/ramdisk/G950F/split_img/boot.img-zImage
-			mv -f $RDIR/arch/$ARCH/boot/boot.img-dtb $RDIR/ramdisk/G950F/split_img/boot.img-dtb
-			cd $RDIR/ramdisk/G950F
-			./repackimg.sh --nosudo
-			echo SEANDROIDENFORCE >> image-new.img
-			;;
-		*)
-			echo "Unknown variant: $VARIANT"
-			exit 1
-			;;
-		esac
-	;;
-	dream2lte)
-		case $VARIANT in
-		can|duos|eur|xx)
-			rm -f $RDIR/ramdisk/G955F/split_img/boot.img-zImage
-			rm -f $RDIR/ramdisk/G955F/split_img/boot.img-dtb
-			mv -f $RDIR/arch/$ARCH/boot/boot.img-zImage $RDIR/ramdisk/G955F/split_img/boot.img-zImage
-			mv -f $RDIR/arch/$ARCH/boot/boot.img-dtb $RDIR/ramdisk/G955F/split_img/boot.img-dtb
-			cd $RDIR/ramdisk/G955F
-			./repackimg.sh --nosudo
-			echo SEANDROIDENFORCE >> image-new.img
-			;;
-		*)
-			echo "Unknown variant: $VARIANT"
-			exit 1
-			;;
-		esac
-	;;
 	greatlte)
 		case $VARIANT in
 		can|duos|eur|xx)

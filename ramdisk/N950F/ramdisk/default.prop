@@ -11,20 +11,10 @@ ro.debuggable=1
 persist.sys.usb.config=mtp,adb
 persist.service.adb.enable=1
 ro.zygote=zygote64_32
-ro.sf.lcd_density=420
-ro.sf.init.lcd_density=560
 ro.telephony.default_network=9
 ro.supportmodel.mptcp=1
 ro.radio.noril=no
-pm.dexopt.first-boot=interpret-only
-pm.dexopt.boot=verify-profile
-pm.dexopt.install=interpret-only
-pm.dexopt.bg-dexopt=speed-profile
-pm.dexopt.ab-ota=speed-profile
-pm.dexopt.nsys-library=speed
-pm.dexopt.shared-apk=speed
-pm.dexopt.forced-dexopt=speed
-pm.dexopt.core-app=speed
+ro.telephony.default_cdma_sub=0
 dalvik.vm.image-dex2oat-Xms=64m
 dalvik.vm.image-dex2oat-Xmx=64m
 dalvik.vm.dex2oat-Xms=64m
@@ -32,7 +22,13 @@ dalvik.vm.dex2oat-Xmx=512m
 ro.dalvik.vm.native.bridge=0
 dalvik.vm.usejit=true
 dalvik.vm.usejitprofiles=true
+dalvik.vm.dexopt.secondary=true
 dalvik.vm.appimageformat=lz4
+pm.dexopt.first-boot=quicken
+pm.dexopt.boot=verify
+pm.dexopt.install=quicken
+pm.dexopt.bg-dexopt=speed-profile
+pm.dexopt.ab-ota=speed-profile
 debug.atrace.tags.enableflags=0
 
 wlan.wfd.hdcp=disable
@@ -40,6 +36,6 @@ ro.securestorage.support=false
 #
 # BOOTIMAGE_BUILD_PROPERTIES
 #
-ro.bootimage.build.date=Fri Jan 26 14:26:46 KST 2018
-ro.bootimage.build.date.utc=1516944406
-ro.bootimage.build.fingerprint=samsung/greatltexx/greatlte:7.1.1/NMF26X/N950FXXU3BRA8:user/test-keys
+ro.bootimage.build.date=Tue Apr 17 21:07:04 KST 2018
+ro.bootimage.build.date.utc=1523966824
+ro.bootimage.build.fingerprint=samsung/greatltexx/greatlte:8.0.0/R16NW/N950FXXS3CRDB:user/test-keys
