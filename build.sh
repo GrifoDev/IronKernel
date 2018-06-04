@@ -4,7 +4,7 @@
 export MODEL=greatlte
 export VARIANT=eur
 export ARCH=arm64
-export BUILD_CROSS_COMPILE=../Toolchain/gcc-linaro-7.2.1_aarch64-linux-gnu/bin/aarch64-linux-gnu-
+export BUILD_CROSS_COMPILE=../Toolchain/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 export BUILD_JOB_NUMBER=`grep processor /proc/cpuinfo|wc -l`
 
 RDIR=$(pwd)
