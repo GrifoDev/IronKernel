@@ -606,6 +606,7 @@ enum rtl8152_flags {
 #define VENDOR_ID_SAMSUNG		0x04e8
 #define VENDOR_ID_LENOVO		0x17ef
 #define VENDOR_ID_TPLINK		0x2357
+#define VENDOR_ID_LINKSYS		0x13b1
 #define VENDOR_ID_NVIDIA		0x0955
 
 #define MCU_TYPE_PLA			0x0100
@@ -1362,6 +1363,7 @@ static void intr_callback(struct urb *urb)
 		}
 	} else {
 		if (netif_carrier_ok(tp->netdev)) {
+			netif_stop_queue(tp->netdev);
 			set_bit(RTL8152_LINK_CHG, &tp->flags);
 			schedule_delayed_work(&tp->schedule, 0);
 		}
@@ -1432,6 +1434,7 @@ static int alloc_all_mem(struct r8152 *tp)
 	spin_lock_init(&tp->rx_lock);
 	spin_lock_init(&tp->tx_lock);
 	INIT_LIST_HEAD(&tp->tx_free);
+	INIT_LIST_HEAD(&tp->rx_done);
 	skb_queue_head_init(&tp->tx_queue);
 	skb_queue_head_init(&tp->rx_queue);
 
@@ -1812,7 +1815,7 @@ static int r8152_tx_agg_fill(struct r8152 *tp, struct tx_agg *agg)
 
 		tx_data += len;
 		agg->skb_len += len;
-		agg->skb_num++;
+		agg->skb_num += skb_shinfo(skb)->gso_segs ?: 1;
 
 		dev_kfree_skb_any(skb);
 
@@ -1854,7 +1857,7 @@ static u8 r8152_rx_csum(struct r8152 *tp, struct rx_desc *rx_desc)
 	u8 checksum = CHECKSUM_NONE;
 	u32 opts2, opts3;
 
-	if (tp->version == RTL_VER_01)
+	if (!(tp->netdev->features & NETIF_F_RXCSUM))
 		goto return_result;
 
 	opts2 = le32_to_cpu(rx_desc->opts2);
@@ -2123,6 +2126,9 @@ static inline int __r8152_poll(struct r8152 *tp, int budget)
 	if (work_done < budget) {
 		napi_complete(napi);
 		if (!list_empty(&tp->rx_done))
+			napi_schedule(napi);
+		else if (!skb_queue_empty(&tp->tx_queue) &&
+			 !list_empty(&tp->tx_free))
 			napi_schedule(napi);
 	}
 
@@ -5550,6 +5556,9 @@ static void set_carrier(struct r8152 *tp)
 			netif_carrier_on(netdev);
 			rtl_start_rx(tp);
 			napi_enable(&tp->napi);
+		} else if (netif_queue_stopped(netdev) &&
+			   skb_queue_len(&tp->tx_queue) < tp->tx_qlen) {
+			netif_wake_queue(netdev);
 		}
 	} else {
 		if (netif_carrier_ok(netdev)) {
@@ -6030,12 +6039,12 @@ static int rtl8152_pre_reset(struct usb_interface *intf)
 	if (!netif_running(netdev))
 		return 0;
 
+	netif_stop_queue(netdev);
 	napi_disable(&tp->napi);
 	clear_bit(WORK_ENABLE, &tp->flags);
 	usb_kill_urb(tp->intr_urb);
 	cancel_delayed_work_sync(&tp->schedule);
 	if (netif_carrier_ok(netdev)) {
-		netif_stop_queue(netdev);
 		mutex_lock(&tp->control);
 		tp->rtl_ops.disable(tp);
 		mutex_unlock(&tp->control);
@@ -6060,12 +6069,14 @@ static int rtl8152_post_reset(struct usb_interface *intf)
 	if (netif_carrier_ok(netdev)) {
 		mutex_lock(&tp->control);
 		tp->rtl_ops.enable(tp);
+		rtl_start_rx(tp);
 		rtl8152_set_rx_mode(netdev);
 		mutex_unlock(&tp->control);
-		netif_wake_queue(netdev);
 	}
 
 	napi_enable(&tp->napi);
+	netif_wake_queue(netdev);
+	usb_submit_urb(tp->intr_urb, GFP_KERNEL);
 
 	return 0;
 }
@@ -6089,6 +6100,8 @@ static bool delay_autosuspend(struct r8152 *tp)
 	 * linking change event. And it wouldn't wake when linking on.
 	 */
 	if (!sw_linking && tp->rtl_ops.in_nway(tp))
+		return true;
+	else if (!skb_queue_empty(&tp->tx_queue))
 		return true;
 	else
 		return false;
@@ -6127,7 +6140,7 @@ static int rtl8152_rumtime_suspend(struct r8152 *tp)
 		clear_bit(WORK_ENABLE, &tp->flags);
 		usb_kill_urb(tp->intr_urb);
 
-		tp->rtl_ops.autosuspend_en(tp, true);
+		rtl_runtime_suspend_enable(tp, true);
 
 		if (netif_carrier_ok(netdev)) {
 			napi_disable(&tp->napi);
@@ -6195,8 +6208,18 @@ static int rtl8152_resume(struct usb_interface *intf)
 			clear_bit(SELECTIVE_SUSPEND, &tp->flags);
 			napi_disable(&tp->napi);
 			set_bit(WORK_ENABLE, &tp->flags);
-			if (netif_carrier_ok(tp->netdev))
-				rtl_start_rx(tp);
+
+			if (netif_carrier_ok(tp->netdev)) {
+				if (rtl8152_get_speed(tp) & LINK_STATUS) {
+					rtl_start_rx(tp);
+				} else {
+					netif_carrier_off(tp->netdev);
+					tp->rtl_ops.disable(tp);
+					netif_info(tp, link, tp->netdev,
+						   "linking down\n");
+				}
+			}
+
 			napi_enable(&tp->napi);
 		} else {
 			tp->rtl_ops.up(tp);
@@ -7319,6 +7342,11 @@ static int rtl8152_probe(struct usb_interface *intf,
 				NETIF_F_IPV6_CSUM | NETIF_F_TSO6;
 #endif /* LINUX_VERSION_CODE > KERNEL_VERSION(2,6,38) */
 
+	if (tp->version == RTL_VER_01) {
+		netdev->features &= ~NETIF_F_RXCSUM;
+		netdev->hw_features &= ~NETIF_F_RXCSUM;
+	}
+
 	netdev->ethtool_ops = &ops;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
 	netif_set_gso_max_size(netdev, RTL_LIMITED_TSO_SIZE);
@@ -7451,6 +7479,10 @@ static struct usb_device_id rtl8152_table[] = {
 	/* TP-LINK */
 	{REALTEK_USB_DEVICE_INTERFACE_CLASS(VENDOR_ID_TPLINK, 0x0601)},
 	{REALTEK_USB_DEVICE_INTERFACE_CLASS_AND_INTERFACE_INFO(VENDOR_ID_TPLINK, 0x0601)},
+
+	/* Linksys */
+	{REALTEK_USB_DEVICE_INTERFACE_CLASS(VENDOR_ID_LINKSYS,  0x0041)},
+	{REALTEK_USB_DEVICE_INTERFACE_CLASS_AND_INTERFACE_INFO(VENDOR_ID_LINKSYS,  0x0041)},
 
 	/* Nvidia */
 	{REALTEK_USB_DEVICE_INTERFACE_CLASS(VENDOR_ID_NVIDIA,  0x09ff)},

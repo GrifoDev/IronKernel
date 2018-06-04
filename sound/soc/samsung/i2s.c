@@ -1050,7 +1050,16 @@ static int config_setup(struct i2s_dai *i2s)
 		return 0;
 
 	if (!(i2s->quirks & QUIRK_NO_MUXPSR)) {
+<<<<<<< HEAD
 		psr = (i2s->rclk_srcrate + (rfs / 2)) / i2s->frmclk / rfs;
+=======
+		struct clk *rclksrc = i2s->clk_table[CLK_I2S_RCLK_SRC];
+
+		if (i2s->rclk_srcrate == 0 && rclksrc && !IS_ERR(rclksrc))
+			i2s->rclk_srcrate = clk_get_rate(rclksrc);
+
+		psr = i2s->rclk_srcrate / i2s->frmclk / rfs;
+>>>>>>> 50eb02ed89920f753202d703541bebbd9d8c3dd8
 		writel(((psr - 1) << 8) | PSR_PSREN, i2s->addr + I2SPSR);
 		dev_dbg(&i2s->pdev->dev,
 			"RCLK_SRC=%luHz PSR=%u, RCLK=%dfs, BCLK=%dfs\n",
