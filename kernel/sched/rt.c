@@ -2736,10 +2736,9 @@ static void push_rt_tasks(struct rq *rq)
  * rq->rt.push_cpu holds the last cpu returned by this function,
  * or if this is the first instance, it must hold rq->cpu.
  */
-static int rto_next_cpu(struct root_domain *rd)
+static int rto_next_cpu(struct rq *rq)
 {
 	int prev_cpu = rq->rt.push_cpu;
-	int next;
 	int cpu;
 
 	cpu = cpumask_next(prev_cpu, rq->rd->rto_mask);
@@ -2803,17 +2802,12 @@ static void tell_cpu_to_push(struct rq *rq)
 			 * Tell the IPI to restart the loop as things have
 			 * changed since it started.
 	 */
-<<<<<<< HEAD
 			rq->rt.push_flags |= RT_PUSH_IPI_RESTART;
 			raw_spin_unlock(&rq->rt.push_lock);
 			return;
 		}
 		raw_spin_unlock(&rq->rt.push_lock);
 	}
-=======
-	if (rq->rd->rto_cpu < 0)
-		cpu = rto_next_cpu(rq->rd);
->>>>>>> 50eb02ed89920f753202d703541bebbd9d8c3dd8
 
 	/* When here, there's no IPI going around */
 
@@ -2824,29 +2818,15 @@ static void tell_cpu_to_push(struct rq *rq)
 
 	rq->rt.push_flags = RT_PUSH_IPI_EXECUTING;
 
-<<<<<<< HEAD
 	irq_work_queue_on(&rq->rt.push_work, cpu);
-=======
-	if (cpu >= 0) {
-		/* Make sure the rd does not get freed while pushing */
-		sched_get_rd(rq->rd);
-		irq_work_queue_on(&rq->rd->rto_push_work, cpu);
-	}
->>>>>>> 50eb02ed89920f753202d703541bebbd9d8c3dd8
 }
 
 /* Called from hardirq context */
 static void try_to_push_tasks(void *arg)
 {
-<<<<<<< HEAD
 	struct rt_rq *rt_rq = arg;
 	struct rq *rq, *src_rq;
 	int this_cpu;
-=======
-	struct root_domain *rd =
-		container_of(work, struct root_domain, rto_push_work);
-	struct rq *rq;
->>>>>>> 50eb02ed89920f753202d703541bebbd9d8c3dd8
 	int cpu;
 
 	this_cpu = rt_rq->push_cpu;
@@ -2864,7 +2844,6 @@ again:
 		raw_spin_unlock(&rq->lock);
 	}
 
-<<<<<<< HEAD
 	/* Pass the IPI to the next rt overloaded queue */
 	raw_spin_lock(&rt_rq->push_lock);
 	/*
@@ -2883,19 +2862,7 @@ again:
 	raw_spin_unlock(&rt_rq->push_lock);
 
 	if (cpu >= nr_cpu_ids)
-=======
-	raw_spin_lock(&rd->rto_lock);
-
-	/* Pass the IPI to the next rt overloaded queue */
-	cpu = rto_next_cpu(rd);
-
-	raw_spin_unlock(&rd->rto_lock);
-
-	if (cpu < 0) {
-		sched_put_rd(rd);
->>>>>>> 50eb02ed89920f753202d703541bebbd9d8c3dd8
 		return;
-	}
 
 	/*
 	 * It is possible that a restart caused this CPU to be
@@ -2906,7 +2873,6 @@ again:
 		goto again;
 
 	/* Try the next RT overloaded CPU */
-<<<<<<< HEAD
 	irq_work_queue_on(&rt_rq->push_work, cpu);
 }
 
@@ -2915,9 +2881,6 @@ static void push_irq_work_func(struct irq_work *work)
 	struct rt_rq *rt_rq = container_of(work, struct rt_rq, push_work);
 
 	try_to_push_tasks(rt_rq);
-=======
-	irq_work_queue_on(&rd->rto_push_work, cpu);
->>>>>>> 50eb02ed89920f753202d703541bebbd9d8c3dd8
 }
 #endif /* HAVE_RT_PUSH_IPI */
 
@@ -3108,13 +3071,8 @@ static void switched_to_rt(struct rq *rq, struct task_struct *p)
 #ifdef CONFIG_SMP
 		if (p->nr_cpus_allowed > 1 && rq->rt.overloaded)
 			queue_push_tasks(rq);
-<<<<<<< HEAD
 #else
-		if (p->prio < rq->curr->prio)
-=======
-#endif /* CONFIG_SMP */
 		if (p->prio < rq->curr->prio && cpu_online(cpu_of(rq)))
->>>>>>> 50eb02ed89920f753202d703541bebbd9d8c3dd8
 			resched_curr(rq);
 #endif /* CONFIG_SMP */
 	}
