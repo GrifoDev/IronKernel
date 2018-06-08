@@ -4,7 +4,7 @@
 export MODEL=greatlte
 export VARIANT=eur
 export ARCH=arm64
-export BUILD_CROSS_COMPILE=../Toolchain/aarch64-cortex_a53-linux-gnueabi-6.4.0/bin/aarch64-cortex_a53-linux-gnueabi-
+export BUILD_CROSS_COMPILE=../Toolchain/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 export BUILD_JOB_NUMBER=`grep processor /proc/cpuinfo|wc -l`
 
 RDIR=$(pwd)
@@ -60,7 +60,9 @@ FUNC_BUILD_DTIMAGE_TARGET()
 		case $VARIANT in
 		can|duos|eur|xx)
 			DTSFILES="exynos8895-greatlte_eur_open_00 exynos8895-greatlte_eur_open_01
-					exynos8895-greatlte_eur_open_02 exynos8895-greatlte_eur_open_06"
+					exynos8895-greatlte_eur_open_02 exynos8895-greatlte_eur_open_03
+					exynos8895-greatlte_eur_open_05 exynos8895-greatlte_eur_open_06
+					exynos8895-greatlte_eur_open_07"
 			;;
 		*)
 			echo "Unknown variant: $VARIANT"
